@@ -1,0 +1,202 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Smart E-Commerce — Discover amazing products with intelligent recommendations.">
+    <title>{% block title %}Smart E-Commerce{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- ============ NAVBAR ============ -->
+    <nav class="navbar navbar-expand-lg sticky-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'products:home' %}">
+                <i class="bi bi-bag-heart-fill me-2"></i>SmartShop
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navContent">
+                <!-- Search bar -->
+                <form class="d-flex mx-auto my-2 my-lg-0 search-form" action="{% url 'products:product_list' %}" method="GET">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="q" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'products:product_list' %}">
+                            <i class="bi bi-grid me-1"></i>Products
+                        </a>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'products:wishlist' %}">
+                                <i class="bi bi-heart me-1"></i>Wishlist
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{% url 'cart:cart' %}">
+                                <i class="bi bi-cart3 me-1"></i>Cart
+                                {% if cart_item_count %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">
+                                        {{ cart_item_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle me-1"></i>{{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
+                                <li><a class="dropdown-item" href="{% url 'users:profile' %}"><i class="bi bi-person me-2"></i>My Profile</a></li>
+                                {% if user.profile.is_seller %}
+                                <li><a class="dropdown-item text-primary" href="{% url 'products:seller_dashboard' %}"><i class="bi bi-shop me-2"></i>Seller Dashboard</a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{% url 'orders:order_history' %}"><i class="bi bi-receipt me-2"></i>Order History</a></li>
+                                {% if user.is_staff %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2"></i>Admin Panel</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'users:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{% url 'cart:cart' %}">
+                                <i class="bi bi-cart3 me-1"></i>Cart
+                                {% if cart_item_count %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">
+                                        {{ cart_item_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-primary btn-sm ms-2" href="{% url 'users:login' %}">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary btn-sm ms-2" href="{% url 'users:register' %}">
+                                <i class="bi bi-person-plus me-1"></i>Sign Up
+                            </a>
+                        </li>
+                    {% endif %}
+                    <!-- Theme Toggle -->
+                    <li class="nav-item ms-lg-2 my-2 my-lg-0 d-flex align-items-center">
+                        <button id="themeToggle" class="btn btn-outline-secondary btn-sm rounded-pill d-flex align-items-center shadow-none" title="Toggle Dark/Light Mode">
+                            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============ MESSAGES ============ -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+            {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill me-2"></i>
+            {% elif message.tags == 'error' %}
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-circle-fill me-2"></i>
+            {% else %}
+                <i class="bi bi-info-circle-fill me-2"></i>
+            {% endif %}
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <main class="min-vh-100">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="footer mt-5">
+        <div class="container">
+            <div class="row g-4 py-5">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-bag-heart-fill me-2"></i>SmartShop</h5>
+                    <p class="text-muted">Your one-stop destination for amazing products with AI-powered recommendations. Shop smarter, not harder.</p>
+                    <div class="social-links">
+                        <a href="#" class="me-3"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="me-3"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="me-3"><i class="bi bi-instagram"></i></a>
+                        <a href="#"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="{% url 'products:home' %}">Home</a></li>
+                        <li><a href="{% url 'products:product_list' %}">Products</a></li>
+                        <li><a href="{% url 'cart:cart' %}">Cart</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Account</h6>
+                    <ul class="list-unstyled footer-links">
+                        {% if user.is_authenticated %}
+                        <li><a href="{% url 'users:profile' %}">My Profile</a></li>
+                        <li><a href="{% url 'orders:order_history' %}">Orders</a></li>
+                        <li><a href="{% url 'products:wishlist' %}">Wishlist</a></li>
+                        {% else %}
+                        <li><a href="{% url 'users:login' %}">Login</a></li>
+                        <li><a href="{% url 'users:register' %}">Register</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-4">
+                    <h6 class="fw-bold mb-3">Newsletter</h6>
+                    <p class="text-muted small">Subscribe for the latest deals and updates.</p>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="your@email.com">
+                        <button class="btn btn-primary" type="button"><i class="bi bi-send"></i></button>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center py-3">
+                <small class="text-muted">&copy; 2026 SmartShop. Built with Django & Bootstrap 5. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

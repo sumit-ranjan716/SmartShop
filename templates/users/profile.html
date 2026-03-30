@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="fw-bold mb-4"><i class="bi bi-person-circle me-2"></i>My Profile</h2>
+
+    <div class="row g-4">
+        <!-- Profile Card -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="Avatar" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 3rem;">
+                            {{ user.username|first|upper }}
+                        </div>
+                    {% endif %}
+                    <h4 class="fw-bold">{{ user.get_full_name|default:user.username }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <hr>
+                    <div class="d-flex justify-content-around text-center">
+                        <div>
+                            <h5 class="fw-bold mb-0">{{ user.orders.count }}</h5>
+                            <small class="text-muted">Orders</small>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">{{ user.reviews.count }}</h5>
+                            <small class="text-muted">Reviews</small>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">{{ user.wishlists.count }}</h5>
+                            <small class="text-muted">Wishlist</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seller Section -->
+            <div class="card border-0 shadow-sm text-center mt-4">
+                <div class="card-body p-4">
+                    {% if user.profile.is_seller %}
+                        <div class="mb-3">
+                            <i class="bi bi-shop text-primary display-4"></i>
+                        </div>
+                        <h5 class="fw-bold text-primary">Seller Account Active</h5>
+                        <p class="text-muted small">You can add and manage your products.</p>
+                        <a href="{% url 'products:seller_dashboard' %}" class="btn btn-outline-primary w-100">
+                            Go to Dashboard
+                        </a>
+                    {% else %}
+                        <div class="mb-3">
+                            <i class="bi bi-shop-window text-muted display-4"></i>
+                        </div>
+                        <h5 class="fw-bold">Want to sell with us?</h5>
+                        <p class="text-muted small">Upgrade your account for free and start selling your products on SmartShop.</p>
+                        <form method="POST" action="{% url 'users:become_seller' %}" onsubmit="return confirm('Are you sure you want to upgrade to a Seller account?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary w-100">
+                                Upgrade to Seller
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Edit Profile</h5>
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Username</label>
+                                {{ u_form.username }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                {{ u_form.email }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">First Name</label>
+                                {{ u_form.first_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name</label>
+                                {{ u_form.last_name }}
+                            </div>
+
+                            <div class="col-12"><hr><h6 class="fw-semibold">Shipping Details</h6></div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                {{ p_form.phone }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Avatar</label>
+                                {{ p_form.avatar }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address</label>
+                                {{ p_form.address }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">City</label>
+                                {{ p_form.city }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">State</label>
+                                {{ p_form.state }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Zip Code</label>
+                                {{ p_form.zipcode }}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg mt-4">
+                            <i class="bi bi-check-circle me-1"></i>Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
