@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Recovery Codes | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center">
+    <div class="card shadow-sm border-0" style="max-width: 500px; width: 100%;">
+        <div class="card-body p-4 p-md-5 text-center">
+            <i class="bi bi-file-earmark-lock text-success display-4 mb-3"></i>
+            <h3 class="fw-bold">Save Your Recovery Codes</h3>
+            <div class="alert alert-warning mt-3 text-start small">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Important:</strong> These codes are the only way to access your account if you lose your phone. Save them in a secure place. They will only be shown once.
+            </div>
+
+            <div class="bg-light p-4 rounded text-center font-monospace fw-bold fs-5 mb-4 border">
+                {% for code in codes %}
+                <div class="mb-2">{{ code }}</div>
+                {% endfor %}
+            </div>
+
+            <button class="btn btn-outline-primary w-100 mb-3" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>Print Codes
+            </button>
+            <a href="{% url 'products:product_list' %}" class="btn btn-primary w-100 fw-semibold">
+                I have saved them
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

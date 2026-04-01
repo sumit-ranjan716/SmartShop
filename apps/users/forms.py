@@ -19,7 +19,7 @@ class UserRegisterForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
-            field.widget.attrs['placeholder'] = field.label
+            field.widget.attrs['placeholder'] = field.label or field.name.capitalize()
 
 
 class UserLoginForm(AuthenticationForm):

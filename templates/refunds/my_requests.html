@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}My Refunds/Exchanges | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h3 class="fw-bold mb-3">My Refund & Exchange Requests</h3>
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white"><strong>Refunds</strong></div>
+        <div class="card-body">
+            {% for r in refunds %}
+            <div class="d-flex justify-content-between border rounded p-2 mb-2">
+                <div>#{{ r.pk }} — {{ r.order_item.product_name }} <span class="badge bg-secondary">{{ r.get_status_display }}</span></div>
+                <a href="{% url 'refunds:request_detail' 'refund' r.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No refund requests.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><strong>Exchanges</strong></div>
+        <div class="card-body">
+            {% for e in exchanges %}
+            <div class="d-flex justify-content-between border rounded p-2 mb-2">
+                <div>#{{ e.pk }} — {{ e.order_item.product_name }} <span class="badge bg-secondary">{{ e.get_status_display }}</span></div>
+                <a href="{% url 'refunds:request_detail' 'exchange' e.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No exchange requests.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

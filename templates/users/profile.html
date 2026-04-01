@@ -65,6 +65,67 @@
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Delivery Partner Section -->
+            {% if not user.profile.is_delivery_person and not user.profile.is_seller %}
+            <div class="card border-0 shadow-sm text-center mt-4">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-truck text-success display-4"></i>
+                    </div>
+                    <h5 class="fw-bold">Become a Delivery Partner</h5>
+                    <p class="text-muted small">Deliver orders in your city and earn money.</p>
+                    <form method="POST" action="{% url 'users:become_delivery_person' %}">
+                        {% csrf_token %}
+                        <div class="mb-3 text-start">
+                            <label class="form-label small fw-semibold">Vehicle Type</label>
+                            <select name="vehicle_type" class="form-select form-select-sm" required>
+                                <option value="">Select...</option>
+                                <option value="bike">Bike</option>
+                                <option value="scooter">Scooter</option>
+                                <option value="car">Car</option>
+                                <option value="van">Van</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 text-start">
+                            <label class="form-label small fw-semibold">Service Areas</label>
+                            <input type="text" name="service_areas" class="form-control form-control-sm" placeholder="E.g. Mumbai, Navi Mumbai" required>
+                            <div class="form-text" style="font-size: 0.75rem;">Comma-separated city names</div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100" onsubmit="return confirm('Are you sure you want to become a delivery partner?');">
+                            Join Team
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Security Section -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4 text-start">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-shield-lock text-primary me-2"></i>Security</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0 fw-semibold">Two-Factor Authentication</h6>
+                            <small class="d-block mt-1">
+                                {% if user.profile.two_factor_enabled %}
+                                <span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Enabled</span>
+                                {% else %}
+                                <span class="text-danger fw-semibold"><i class="bi bi-exclamation-circle-fill me-1"></i>Off</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div>
+                            {% if user.profile.two_factor_enabled %}
+                            <a href="{% url 'users:2fa_disable' %}" class="btn btn-sm btn-outline-danger rounded-pill px-3">Disable</a>
+                            {% else %}
+                            <a href="{% url 'users:2fa_setup' %}" class="btn btn-sm btn-primary rounded-pill px-3">Setup</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Edit Profile Form -->

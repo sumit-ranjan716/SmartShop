@@ -1,0 +1,45 @@
+SmartShop — Order Confirmation
+
+{% if is_seller_notification %}
+Seller notification for {{ seller.username }}
+
+You have a new order containing your products.
+{% else %}
+Hi {{ order.full_name }},
+
+Thank you for your order with SmartShop!
+{% endif %}
+
+Order #: {{ order.order_number }}
+Placed on: {{ order.created_at|date:"d M Y, h:i A" }}
+Status: {{ order.status|default:"Processing" }}
+
+Items:
+{% for item in items %}
+- {{ item.product_name }} (x{{ item.quantity }}) — ₹{{ item.price }} each, subtotal ₹{{ item.quantity|floatformat:0|stringformat:"s"|default:"" }}{{ item.price }}
+{% endfor %}
+
+Subtotal: ₹{{ order.subtotal }}
+Shipping: Free
+Total: ₹{{ order.total }}
+
+Shipping address:
+{{ order.full_name }}
+{{ order.address }}
+{{ order.city }}, {{ order.state }} {{ order.zipcode }}
+Phone: {{ order.phone }}
+
+Payment method: {{ order.payment_method|default:"Online payment" }}
+
+Estimated delivery:
+Your order will be delivered within 5–7 business days.
+
+{% if not is_seller_notification %}
+Track your order:
+{{ tracking_url }}
+
+{% endif %}
+Need help? Reply to this email and our support team will assist you.
+
+Thanks for shopping with SmartShop!
+

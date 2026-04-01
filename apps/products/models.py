@@ -1,10 +1,31 @@
 """
-Models for products, categories, reviews, and wishlist.
+Models for products, brands, categories, reviews, and wishlist.
 """
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
+
+
+class Brand(models.Model):
+    name = models.CharField(max_length=200, unique=True)
+    slug = models.SlugField(max_length=200, unique=True)
+    description = models.TextField(blank=True)
+    logo = models.ImageField(upload_to='brand_logos/', blank=True, null=True)
+    website = models.URLField(blank=True)
+    country_of_origin = models.CharField(max_length=100, blank=True)
+    is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('products:brand_detail', kwargs={'slug': self.slug})
 
 
 class Category(models.Model):
@@ -33,6 +54,7 @@ class Product(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='seller_products', null=True, blank=True)
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     stock = models.PositiveIntegerField(default=0)
@@ -65,6 +87,33 @@ class Product(models.Model):
     @property
     def review_count(self):
         return self.reviews.count()
+
+    @property
+    def active_discount(self):
+        from django.utils import timezone
+        from apps.discounts.models import Discount
+
+        now = timezone.now()
+        discounts = Discount.objects.filter(
+            is_active=True,
+            start_date__lte=now,
+            end_date__gte=now,
+        ).filter(
+            models.Q(product=self) | models.Q(category=self.category)
+        )
+        if not discounts.exists():
+            return None
+
+        # Product-level discount gets higher priority than category-level,
+        # then highest numeric value.
+        return discounts.order_by('-product_id', '-value').first()
+
+    @property
+    def discounted_price(self):
+        discount = self.active_discount
+        if not discount:
+            return self.price
+        return discount.calculate_discounted_price(self.price)
 
 
 class Review(models.Model):

@@ -49,8 +49,36 @@
                                 {{ form.zipcode }}
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Payment Method</label>
-                                {{ form.payment_method }}
+                                <label class="form-label d-block mb-2">Payment Method</label>
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <div class="form-check border rounded p-2 h-100">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="pm_cod" value="cod" checked>
+                                            <label class="form-check-label d-block" for="pm_cod">
+                                                <strong>Cash on Delivery</strong><br>
+                                                <small class="text-muted">Pay with cash when your order arrives.</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check border rounded p-2 h-100">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="pm_upi" value="upi">
+                                            <label class="form-check-label d-block" for="pm_upi">
+                                                <strong>UPI / QR Code</strong><br>
+                                                <small class="text-muted">Free, instant payments via any UPI app.</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check border rounded p-2 h-100">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="pm_stripe" value="stripe">
+                                            <label class="form-check-label d-block" for="pm_stripe">
+                                                <strong>Card (Stripe)</strong><br>
+                                                <small class="text-muted">Secure credit/debit card payments.</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">
@@ -91,10 +119,14 @@
                         <span class="text-muted">Shipping</span>
                         <span class="text-success">Free</span>
                     </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Coupon</span>
+                        <span class="text-danger">- ₹{{ applied_coupon_discount|intcomma }}</span>
+                    </div>
                     <hr>
                     <div class="d-flex justify-content-between">
                         <strong class="fs-5">Total</strong>
-                        <strong class="fs-5 text-primary">₹{{ cart.total_price|intcomma }}</strong>
+                        <strong class="fs-5 text-primary">₹{{ final_total|intcomma }}</strong>
                     </div>
                 </div>
             </div>

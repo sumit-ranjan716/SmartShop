@@ -1,0 +1,8 @@
+<h2>Good News from SmartShop!</h2>
+<p>Hello {{ user.get_full_name|default:user.username }},</p>
+<p>You set a price alert for <strong>{{ product.name }}</strong> at ₹{{ target_price }}.</p>
+<p>We are happy to inform you that the price has dropped to <strong>₹{{ current_price }}</strong>!</p>
+<p>Now is a great time to buy. Don't miss out on this deal.</p>
+<p><a href="{{ product_url }}">View Product on SmartShop</a></p>
+<br>
+<p>Happy Shopping,<br>The SmartShop Team</p>

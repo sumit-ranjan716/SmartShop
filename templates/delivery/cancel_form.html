@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Delivery | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <a href="{% url 'delivery:assignment_detail' assignment.pk %}" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <div class="text-center mb-4">
+                <div class="bg-danger-subtle rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:80px;height:80px;">
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2rem;"></i>
+                </div>
+                <h4 class="fw-bold">Cancel Delivery</h4>
+                <p class="text-muted">Order #{{ assignment.order.order_number }} — {{ assignment.order.full_name }}</p>
+            </div>
+
+            <div class="alert alert-warning">
+                <i class="bi bi-info-circle me-1"></i>
+                Cancelling this delivery will reset the order to <strong>Pending</strong> for reassignment.
+                The customer and admin will be notified.
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Reason for Cancellation</label>
+                    {{ form.reason }}
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Additional Details</label>
+                    {{ form.details }}
+                </div>
+                <button type="submit" class="btn btn-danger btn-lg w-100"
+                        onclick="return confirm('Are you sure you want to cancel this delivery?');">
+                    <i class="bi bi-x-circle me-2"></i>Confirm Cancellation
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -37,6 +37,8 @@
                                     <span class="badge bg-info">Processing</span>
                                 {% elif order.status == 'shipped' %}
                                     <span class="badge bg-primary">Shipped</span>
+                                {% elif order.status == 'out_for_delivery' %}
+                                    <span class="badge bg-warning text-dark">Out for Delivery</span>
                                 {% elif order.status == 'delivered' or order.status == 'completed' %}
                                     <span class="badge bg-success">{{ order.get_status_display }}</span>
                                 {% elif order.status == 'cancelled' %}
@@ -54,6 +56,11 @@
                                 <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-sm btn-outline-primary">
                                     View <i class="bi bi-arrow-right"></i>
                                 </a>
+                                {% if order.status != 'pending' and order.status != 'cancelled' %}
+                                <a href="{% url 'orders:order_tracking' order.order_number %}" class="btn btn-sm btn-outline-secondary ms-1">
+                                    Track
+                                </a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

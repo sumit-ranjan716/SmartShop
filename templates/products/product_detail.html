@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize static %}
 
 {% block title %}{{ product.name }} | SmartShop{% endblock %}
 
@@ -22,9 +22,7 @@
                 {% if product.image %}
                     <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid product-detail-img">
                 {% else %}
-                    <div class="product-detail-placeholder d-flex align-items-center justify-content-center bg-light" style="height: 450px;">
-                        <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
-                    </div>
+                    <img src="{% static 'images/default_product.png' %}" alt="{{ product.name }}" class="img-fluid product-detail-img rounded border">
                 {% endif %}
             </div>
         </div>
@@ -53,7 +51,21 @@
             </div>
 
             <!-- Price -->
-            <h2 class="text-primary fw-bold mb-3">₹{{ product.price|intcomma }}</h2>
+            <h2 class="fw-bold mb-3">
+                {% if product.active_discount %}
+                    <span class="text-muted text-decoration-line-through fs-5 me-2">₹{{ product.price|intcomma }}</span>
+                    <span class="text-danger">₹{{ product.discounted_price|floatformat:2 }}</span>
+                    <span class="badge bg-danger ms-2">
+                        {% if product.active_discount.discount_type == 'percentage' %}
+                            {{ product.active_discount.value|floatformat:0 }}% OFF
+                        {% else %}
+                            ₹{{ product.active_discount.value|floatformat:0 }} OFF
+                        {% endif %}
+                    </span>
+                {% else %}
+                    <span class="text-primary">₹{{ product.price|intcomma }}</span>
+                {% endif %}
+            </h2>
 
             <!-- Stock -->
             {% if product.in_stock %}
@@ -65,6 +77,22 @@
                     <i class="bi bi-x-circle me-1"></i>Out of Stock
                 </span>
             {% endif %}
+
+            <!-- Price Guardian Widget -->
+            <div class="card glass-card border-0 shadow-sm mb-4 border-start border-4 border-info">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-info"><i class="bi bi-graph-up-arrow me-1"></i>Smart Price Guardian</h6>
+                        {% if user.is_authenticated %}
+                            <button class="btn btn-sm btn-outline-info" onclick="toggleAlertModal()">
+                                <i class="bi bi-bell me-1"></i>Set Alert
+                            </button>
+                        {% endif %}
+                    </div>
+                    <canvas id="priceChart" style="max-height: 120px;"></canvas>
+                    <div id="priceInsight" class="small text-muted mt-2 fw-semibold text-center">Loading insights...</div>
+                </div>
+            </div>
 
             <!-- Description -->
             <p class="text-muted my-4">{{ product.description }}</p>
@@ -93,12 +121,58 @@
             {% endif %}
 
             <!-- Product Meta -->
-            <div class="card border-0 bg-light">
+            <div class="card glass-card border-0 bg-transparent shadow-sm">
                 <div class="card-body small">
                     <div class="row">
                         <div class="col-6"><strong>Category:</strong> {{ product.category.name }}</div>
                         <div class="col-6"><strong>Added:</strong> {{ product.created_at|date:"M d, Y" }}</div>
                     </div>
+                    {% if product.brand %}
+                    <div class="row mt-2 align-items-center">
+                        <div class="col-12 d-flex align-items-center">
+                            <strong class="me-2">Brand:</strong>
+                            <a href="{{ product.brand.get_absolute_url }}" class="d-inline-flex align-items-center text-decoration-none">
+                                {% if product.brand.logo %}
+                                    <img src="{{ product.brand.logo.url }}" alt="{{ product.brand.name }}" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover;">
+                                {% else %}
+                                    <span class="badge bg-primary-subtle text-primary rounded-circle me-2" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
+                                        {{ product.brand.name|first|upper }}
+                                    </span>
+                                {% endif %}
+                                <span class="fw-semibold">{{ product.brand.name }}</span>
+                                <i class="bi bi-arrow-right-short ms-1"></i>
+                            </a>
+                        </div>
+                        {% if product.brand.is_verified %}
+                        <div class="col-12 mt-2">
+                            <span class="badge bg-primary-subtle text-primary">
+                                <i class="bi bi-patch-check-fill me-1"></i>Verified Brand
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div class="modal fade" id="alertModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title"><i class="bi bi-bell me-2 text-info"></i>Set Price Alert</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">Current Price: ₹{{ product.price|intcomma }}</p>
+                    <label class="form-label fw-semibold">Target Price (₹)</label>
+                    <input type="number" id="alertTargetPrice" class="form-control" placeholder="e.g. {{ product.price|add:'-10'|floatformat:0 }}">
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" onclick="saveAlert('')">Remove Alert</button>
+                    <button type="button" class="btn btn-info text-white" onclick="saveAlert(document.getElementById('alertTargetPrice').value)">Save Alert</button>
                 </div>
             </div>
         </div>
@@ -176,6 +250,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     function changeQty(delta) {
         const input = document.getElementById('qtyInput');
@@ -183,5 +258,75 @@
         val = Math.max(1, Math.min(val, parseInt(input.max)));
         input.value = val;
     }
+
+    // Chart logic
+    fetch("{% url 'price_tracker:price_history_api' product.id %}")
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('priceInsight').innerText = data.insight;
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Price',
+                        data: data.data,
+                        borderColor: '#0dcaf0',
+                        backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            display: false,
+                            min: data.min_price * 0.95, 
+                            max: data.max_price * 1.05 
+                        }
+                    }
+                }
+            });
+        });
+
+    {% if user.is_authenticated %}
+    let alertModal = null;
+    document.addEventListener('DOMContentLoaded', () => {
+        alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
+    });
+
+    function toggleAlertModal() {
+        alertModal.show();
+    }
+
+    function saveAlert(targetPrice) {
+        const formData = new FormData();
+        formData.append('target_price', targetPrice);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'price_tracker:toggle_alert' product.id %}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            alertModal.hide();
+            // Show toast or alert
+            const alertHtml = `<div class="alert alert-${data.status === 'added' ? 'success' : 'secondary'} alert-dismissible fade show" role="alert">
+                ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+            document.querySelector('.container').insertAdjacentHTML('afterbegin', alertHtml);
+        });
+    }
+    {% endif %}
 </script>
 {% endblock %}

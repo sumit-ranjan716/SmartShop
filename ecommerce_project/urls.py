@@ -12,7 +12,11 @@ urlpatterns = [
     path('users/', include('apps.users.urls')),
     path('cart/', include('apps.cart.urls')),
     path('orders/', include('apps.orders.urls')),
+    path('discounts/', include('apps.discounts.urls')),
+    path('refunds/', include('apps.refunds.urls')),
     path('recommendations/', include('apps.recommendations.urls')),
+    path('delivery/', include('apps.delivery.urls')),
+    path('price-tracker/', include('apps.price_tracker.urls')),
 ]
 
 # Serve media files in development

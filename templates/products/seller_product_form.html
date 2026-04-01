@@ -39,6 +39,11 @@
                                 {{ form.category }}
                                 {% if form.category.errors %}<small class="text-danger">{{ form.category.errors.0 }}</small>{% endif %}
                             </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Brand</label>
+                                {{ form.brand }}
+                                {% if form.brand.errors %}<small class="text-danger">{{ form.brand.errors.0 }}</small>{% endif %}
+                            </div>
                             
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Description</label>
