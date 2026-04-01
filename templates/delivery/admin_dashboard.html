@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Delivery Dashboard | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Delivery Management</h2>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="GET" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">All Statuses</option>
+                        {% for code, label in status_choices %}
+                        <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Delivery Person</label>
+                    <input type="text" name="dp" value="{{ dp_filter }}" class="form-control form-control-sm" placeholder="Username...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Date</label>
+                    <input type="date" name="date" value="{{ date_filter }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Unassigned Orders -->
+    {% if unassigned_orders %}
+    <div class="card border-0 shadow-sm mb-4 border-start border-warning border-4">
+        <div class="card-body p-3">
+            <h5 class="fw-bold mb-3 text-warning"><i class="bi bi-exclamation-circle me-2"></i>Unassigned Orders ({{ unassigned_orders.count }})</h5>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>City</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in unassigned_orders %}
+                        <tr>
+                            <td class="fw-semibold">{{ order.order_number }}</td>
+                            <td>{{ order.full_name }}</td>
+                            <td>{{ order.city }}</td>
+                            <td>₹{{ order.total|intcomma }}</td>
+                            <td>
+                                <a href="{% url 'delivery:assign_delivery' order.order_number %}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-person-plus me-1"></i>Assign
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- All Assignments -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-3">
+            <h5 class="fw-bold mb-3">All Assignments</h5>
+            {% if assignments %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Order</th>
+                            <th>Delivery Person</th>
+                            <th>Status</th>
+                            <th>Assigned</th>
+                            <th>Delivered</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in assignments %}
+                        <tr>
+                            <td>{{ a.pk }}</td>
+                            <td>
+                                <span class="fw-semibold">#{{ a.order.order_number }}</span>
+                                <br><small class="text-muted">{{ a.order.full_name }} — {{ a.order.city }}</small>
+                            </td>
+                            <td>{{ a.delivery_person.get_full_name|default:a.delivery_person.username }}</td>
+                            <td><span class="badge delivery-status-{{ a.status }}">{{ a.get_status_display }}</span></td>
+                            <td><small>{{ a.assigned_at|date:"M d, h:i A" }}</small></td>
+                            <td><small>{{ a.delivered_at|date:"M d, h:i A"|default:"—" }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-3">No assignments match the current filters.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

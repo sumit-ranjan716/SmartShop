@@ -1,24 +1,42 @@
 {% load humanize %}
+{% load static %}
 <!-- Reusable product card partial -->
-<div class="card product-card h-100 border-0 shadow-sm card-gradient">
+<div class="card product-card glass-card h-100 border-0 card-gradient">
     <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
         <div class="product-img-wrapper">
             {% if product.image %}
                 <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
             {% else %}
-                <div class="product-img-placeholder d-flex align-items-center justify-content-center">
-                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-                </div>
+                <img src="{% static 'images/default_product.png' %}" class="card-img-top product-img" alt="{{ product.name }}">
             {% endif %}
             {% if not product.in_stock %}
                 <span class="badge bg-danger position-absolute top-0 end-0 m-2">Out of Stock</span>
             {% elif product.featured %}
                 <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2"><i class="bi bi-star-fill"></i> Featured</span>
             {% endif %}
+            {% if product.active_discount %}
+                <span class="badge bg-danger position-absolute top-0 start-0 m-2">
+                    {% if product.active_discount.discount_type == 'percentage' %}
+                        {{ product.active_discount.value|floatformat:0 }}% OFF
+                    {% else %}
+                        ₹{{ product.active_discount.value|floatformat:0 }} OFF
+                    {% endif %}
+                </span>
+            {% endif %}
         </div>
     </a>
     <div class="card-body d-flex flex-column">
         <small class="text-muted text-uppercase mb-1" style="font-size: 0.7rem;">{{ product.category.name }}</small>
+        {% if product.brand %}
+        <small class="d-block mb-1" style="font-size: 0.75rem;">
+            <a href="{{ product.brand.get_absolute_url }}" class="text-decoration-none text-muted">
+                {% if product.brand.is_verified %}
+                    <i class="bi bi-patch-check-fill text-primary me-1"></i>
+                {% endif %}
+                {{ product.brand.name }}
+            </a>
+        </small>
+        {% endif %}
         <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-body">
             <h6 class="card-title fw-semibold mb-2 product-title">{{ product.name }}</h6>
         </a>
@@ -40,7 +58,14 @@
             {% endwith %}
         </div>
         <div class="mt-auto d-flex justify-content-between align-items-center">
-            <span class="fw-bold text-primary fs-5">₹{{ product.price|intcomma }}</span>
+            <span>
+                {% if product.active_discount %}
+                    <small class="text-muted text-decoration-line-through d-block">₹{{ product.price|intcomma }}</small>
+                    <span class="fw-bold text-danger fs-5">₹{{ product.discounted_price|floatformat:2 }}</span>
+                {% else %}
+                    <span class="fw-bold text-primary fs-5">₹{{ product.price|intcomma }}</span>
+                {% endif %}
+            </span>
             {% if product.in_stock %}
             <form method="POST" action="{% url 'cart:add' product.id %}">
                 {% csrf_token %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Seller Refund Requests | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h3 class="fw-bold mb-3">Pending Refund/Exchange Requests</h3>
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white"><strong>Refunds</strong></div>
+        <div class="card-body">
+            {% for r in refunds %}
+            <div class="border rounded p-3 mb-2">
+                <div class="mb-2">#{{ r.pk }} — {{ r.order_item.product_name }} by {{ r.user.username }}</div>
+                <form method="post" action="{% url 'refunds:seller_approve_refund' r.pk %}" class="d-inline">{% csrf_token %}
+                    <input type="text" name="seller_note" class="form-control form-control-sm d-inline-block w-50" placeholder="Approval note">
+                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                </form>
+                <form method="post" action="{% url 'refunds:seller_reject_refund' r.pk %}" class="d-inline">{% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                </form>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No pending refunds.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><strong>Exchanges</strong></div>
+        <div class="card-body">
+            {% for e in exchanges %}
+            <div class="border rounded p-3 mb-2">
+                <div class="mb-2">#{{ e.pk }} — {{ e.order_item.product_name }} by {{ e.user.username }}</div>
+                <form method="post" action="{% url 'refunds:seller_approve_exchange' e.pk %}" class="d-inline">{% csrf_token %}
+                    <input type="text" name="seller_note" class="form-control form-control-sm d-inline-block w-50" placeholder="Approval note">
+                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                </form>
+                <form method="post" action="{% url 'refunds:seller_reject_exchange' e.pk %}" class="d-inline">{% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                </form>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No pending exchanges.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

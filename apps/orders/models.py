@@ -4,6 +4,8 @@ Order and OrderItem models for the checkout/order flow.
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
 from apps.products.models import Product
 
 
@@ -13,6 +15,7 @@ class Order(models.Model):
         ('pending', 'Pending'),
         ('processing', 'Processing'),
         ('shipped', 'Shipped'),
+        ('out_for_delivery', 'Out for Delivery'),
         ('delivered', 'Delivered'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
@@ -20,7 +23,8 @@ class Order(models.Model):
 
     PAYMENT_CHOICES = [
         ('cod', 'Cash on Delivery'),
-        ('razorpay', 'Razorpay'),
+        ('stripe', 'Credit/Debit Card (Stripe)'),
+        ('upi', 'UPI / QR Code'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
@@ -29,6 +33,10 @@ class Order(models.Model):
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='cod')
     payment_id = models.CharField(max_length=200, blank=True, null=True)
     is_paid = models.BooleanField(default=False)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    coupon = models.ForeignKey('discounts.CouponCode', null=True, blank=True, on_delete=models.SET_NULL)
+    estimated_delivery = models.DateField(null=True, blank=True)
+    tracking_number = models.CharField(max_length=100, blank=True)
 
     # Shipping details
     full_name = models.CharField(max_length=200)
@@ -55,7 +63,16 @@ class Order(models.Model):
         """Auto-generate order number if not set."""
         if not self.order_number:
             self.order_number = uuid.uuid4().hex[:12].upper()
+        if not self.estimated_delivery:
+            self.estimated_delivery = (timezone.now() + timedelta(days=5)).date()
+        self.total = max(self.subtotal - self.discount_amount, 0)
         super().save(*args, **kwargs)
+
+    @property
+    def can_request_refund(self):
+        if self.status not in ['delivered', 'completed']:
+            return False
+        return timezone.now() <= self.created_at + timedelta(days=7)
 
 
 class OrderItem(models.Model):
@@ -72,3 +89,18 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         return self.price * self.quantity
+
+
+class OrderTracking(models.Model):
+    order = models.ForeignKey(Order, related_name='tracking_events', on_delete=models.CASCADE)
+    status = models.CharField(max_length=50)
+    location = models.CharField(max_length=200, blank=True)
+    description = models.TextField()
+    timestamp = models.DateTimeField(default=timezone.now)
+    updated_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f'{self.order.order_number} - {self.status}'

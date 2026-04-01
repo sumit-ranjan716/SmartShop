@@ -6,6 +6,8 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from apps.products.models import Product
 from .models import Cart, CartItem
+from apps.discounts.models import CouponCode
+from apps.discounts.utils import validate_coupon_for_user_and_cart
 
 
 def _get_or_create_cart(request):
@@ -26,9 +28,26 @@ def cart_view(request):
     """Display the shopping cart."""
     cart = _get_or_create_cart(request)
     items = cart.items.select_related('product').all()
+    applied_coupon_code = request.session.get('applied_coupon_code', '')
+    applied_coupon_discount = 0
+    if request.user.is_authenticated and applied_coupon_code:
+        try:
+            coupon = CouponCode.objects.get(code=applied_coupon_code)
+            valid, result = validate_coupon_for_user_and_cart(coupon, request.user, cart)
+            if valid:
+                applied_coupon_discount = result
+            else:
+                request.session.pop('applied_coupon_code', None)
+                request.session.pop('applied_coupon_discount', None)
+        except CouponCode.DoesNotExist:
+            request.session.pop('applied_coupon_code', None)
+            request.session.pop('applied_coupon_discount', None)
     context = {
         'cart': cart,
         'items': items,
+        'applied_coupon_code': applied_coupon_code,
+        'applied_coupon_discount': applied_coupon_discount,
+        'total_after_discount': max(cart.total_price - applied_coupon_discount, 0),
     }
     return render(request, 'cart/cart.html', context)
 

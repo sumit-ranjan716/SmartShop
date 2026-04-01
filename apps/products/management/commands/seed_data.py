@@ -4,7 +4,7 @@ Run: python manage.py seed_data
 """
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from apps.products.models import Category, Product, Review
+from apps.products.models import Category, Product, Review, Brand
 from apps.orders.models import Order, OrderItem
 import random
 from decimal import Decimal
@@ -15,6 +15,32 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write('🌱 Seeding database...\n')
+
+        # ---- Brands ----
+        brand_data = [
+            ('Apple', 'apple', 'Premium electronics and devices', 'USA', True),
+            ('Samsung', 'samsung', 'Global leader in electronics and appliances', 'South Korea', True),
+            ('Nike', 'nike', 'Sportswear and athletic gear', 'USA', True),
+            ('Adidas', 'adidas', 'Sportswear and shoes', 'Germany', True),
+            ('Prestige', 'prestige', 'Home and kitchen appliances brand', 'India', False),
+            ('Penguin Books', 'penguin-books', 'Publisher of books across genres', 'UK', True),
+        ]
+
+        brands = {}
+        for name, slug, desc, country, verified in brand_data:
+            brand, created = Brand.objects.get_or_create(
+                slug=slug,
+                defaults={
+                    'name': name,
+                    'description': desc,
+                    'country_of_origin': country,
+                    'is_verified': verified,
+                    'is_active': True,
+                },
+            )
+            brands[slug] = brand
+            status = '✅ Created' if created else '⏭️ Exists'
+            self.stdout.write(f'  {status}: Brand "{name}"')
 
         # ---- Categories ----
         category_data = [
@@ -89,6 +115,21 @@ class Command(BaseCommand):
                     'is_active': True,
                 }
             )
+            # Simple brand assignment by category
+            if cat_slug == 'electronics':
+                prod.brand = brands.get('apple')
+            elif cat_slug == 'fashion':
+                prod.brand = brands.get('nike')
+            elif cat_slug == 'home-kitchen':
+                prod.brand = brands.get('prestige')
+            elif cat_slug == 'books':
+                prod.brand = brands.get('penguin-books')
+            elif cat_slug == 'sports-fitness':
+                prod.brand = brands.get('adidas')
+            elif cat_slug == 'beauty-health':
+                prod.brand = brands.get('nike')
+            prod.save()
+
             products.append(prod)
             status = '✅ Created' if created else '⏭️ Exists'
             self.stdout.write(f'  {status}: Product "{name}"')

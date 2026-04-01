@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Detail | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h3 class="fw-bold mb-3">{{ request_type|title }} Request #{{ request_obj.pk }}</h3>
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <p><strong>Status:</strong> <span class="badge bg-info">{{ request_obj.get_status_display }}</span></p>
+            <p><strong>Reason:</strong> {{ request_obj.get_reason_display }}</p>
+            <p><strong>Description:</strong> {{ request_obj.description }}</p>
+            {% if request_obj.seller_note %}
+            <p><strong>Seller Note:</strong> {{ request_obj.seller_note }}</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h6>Photos</h6>
+            <div class="d-flex flex-wrap gap-2">
+                {% for p in photos %}
+                    <img src="{{ p.photo.url }}" alt="evidence" class="rounded border" style="width:120px; height:120px; object-fit:cover;">
+                {% empty %}
+                    <span class="text-muted">No photos uploaded.</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

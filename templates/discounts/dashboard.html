@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Discounts & Coupons | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">Discounts & Coupons</h3>
+        <div class="d-flex gap-2">
+            <a href="{% url 'discounts:create_discount' %}" class="btn btn-outline-primary btn-sm">New Discount</a>
+            <a href="{% url 'discounts:create_coupon' %}" class="btn btn-primary btn-sm">New Coupon</a>
+        </div>
+    </div>
+    <div class="alert alert-info">Total discount given: <strong>₹{{ total_discount_given|intcomma }}</strong></div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white"><strong>Discount Rules</strong></div>
+                <div class="card-body">
+                    {% for d in discounts %}
+                    <div class="border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ d.label|default:"Discount" }}</strong><br>
+                                <small class="text-muted">
+                                    {% if d.product %}Product: {{ d.product.name }}{% else %}Category: {{ d.category.name }}{% endif %}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if d.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if d.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">No discounts yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white"><strong>Coupons</strong></div>
+                <div class="card-body">
+                    {% for c in coupons %}
+                    <div class="border rounded p-2 mb-2 d-flex justify-content-between">
+                        <div>
+                            <strong>{{ c.code }}</strong><br>
+                            <small class="text-muted">Used {{ c.times_used }} / {{ c.usage_limit }}</small>
+                        </div>
+                        <a href="{% url 'discounts:coupon_stats' c.pk %}" class="btn btn-sm btn-outline-primary">Stats</a>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">No coupons yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

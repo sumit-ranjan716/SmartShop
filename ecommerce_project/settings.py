@@ -3,9 +3,15 @@ Django settings for ecommerce_project.
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env if present
+env_path = BASE_DIR / '.env'
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-sm4rt-3c0mm3rc3-k3y-ch4ng3-1n-pr0duct10n'
@@ -24,12 +30,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    # OTP / 2FA
+    'django_otp',
+    'django_otp.plugins.otp_totp',
     # Local apps
     'apps.users',
     'apps.products',
     'apps.cart',
     'apps.orders',
+    'apps.discounts',
+    'apps.refunds',
     'apps.recommendations',
+    'apps.delivery',
+    'apps.price_tracker',
 ]
 
 MIDDLEWARE = [
@@ -38,6 +51,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -89,6 +103,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# Password reset link validity (24 hours)
+PASSWORD_RESET_TIMEOUT = 86400
+
 # ---------- Internationalization ----------
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
@@ -111,9 +128,23 @@ LOGOUT_REDIRECT_URL = 'products:product_list'
 # ---------- Default primary key field type ----------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ---------- Email (console backend for development) ----------
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# ---------- Email configuration ----------
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@smartshop.com')
 
-# ---------- Razorpay test keys (replace with your keys) ----------
-RAZORPAY_KEY_ID = 'rzp_test_XXXXXXXXXXXXXX'
-RAZORPAY_KEY_SECRET = 'XXXXXXXXXXXXXXXXXXXXXXXX'
+if DEBUG or not EMAIL_HOST_USER:
+    # Use console backend in development or when SMTP is not configured
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# ---------- Stripe & UPI settings ----------
+STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', '')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+UPI_ID = os.environ.get('UPI_ID', '')
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')

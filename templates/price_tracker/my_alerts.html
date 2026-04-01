@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}My Price Alerts | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Sidebar profile menu -->
+        <div class="col-md-3 mb-4">
+            <div class="list-group">
+                <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action">Profile Details</a>
+                <a href="{% url 'orders:order_history' %}" class="list-group-item list-group-item-action">Order History</a>
+                <a href="{% url 'price_tracker:my_alerts' %}" class="list-group-item list-group-item-action active">My Price Alerts</a>
+                <a href="{% url 'products:wishlist' %}" class="list-group-item list-group-item-action">My Wishlist</a>
+            </div>
+        </div>
+
+        <!-- Alerts Content -->
+        <div class="col-md-9">
+            <h3 class="mb-4">My Price Alerts</h3>
+
+            {% if alerts %}
+            <div class="row g-4">
+                {% for alert in alerts %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm {% if alert.can_trigger_now %}border-success{% endif %}">
+                        {% if alert.product.image %}
+                        <img src="{{ alert.product.image.url }}" class="card-img-top" alt="{{ alert.product.name }}" style="height: 150px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold text-truncate">{{ alert.product.name }}</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">Target Price:</small>
+                                <span class="fw-bold text-primary">₹{{ alert.target_price|intcomma }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <small class="text-muted">Current Price:</small>
+                                <span class="fw-bold {% if alert.can_trigger_now %}text-success{% endif %}">
+                                    ₹{{ alert.product.price|intcomma }}
+                                </span>
+                            </div>
+
+                            {% if alert.is_active %}
+                                {% if alert.can_trigger_now %}
+                                <div class="alert alert-success py-1 px-2 text-center small mb-3">
+                                    <i class="bi bi-tag-fill me-1"></i>Target Reached!
+                                </div>
+                                {% else %}
+                                <span class="badge bg-primary-subtle text-primary mb-3 w-100 py-2">Tracking Active</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary mb-3 w-100 py-2">
+                                    Triggered {{ alert.triggered_at|date:"M d, Y" }}
+                                </span>
+                            {% endif %}
+                            
+                            <!-- Remove Alert btn -->
+                            <form method="POST" action="{% url 'price_tracker:toggle_alert' alert.product.pk %}" onsubmit="return confirm('Remove this alert?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="target_price" value="">
+                                <button type="submit" class="btn btn-outline-danger btn-sm w-100 mt-auto">
+                                    <i class="bi bi-trash me-1"></i>Remove Alert
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-bell text-muted" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3 fs-5">You haven't set any price alerts yet.</p>
+                <a href="{% url 'products:product_list' %}" class="btn btn-primary">Browse Products</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

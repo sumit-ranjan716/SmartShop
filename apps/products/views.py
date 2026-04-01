@@ -7,8 +7,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q, Count, Avg
 from django.core.paginator import Paginator
 from django.utils.text import slugify
-from .models import Product, Category, Review, Wishlist
+from django.contrib.auth.models import User
+from .models import Product, Category, Review, Wishlist, Brand
 from .forms import ReviewForm, ProductForm
+from apps.price_tracker.models import Referral
 
 def is_seller(user):
     return hasattr(user, 'profile') and user.profile.is_seller
@@ -18,6 +20,11 @@ def home_view(request):
     """Home page with featured products, categories, and popular items."""
     featured_products = Product.objects.filter(is_active=True, featured=True)[:8]
     categories = Category.objects.all()
+    featured_brands = (
+        Brand.objects.filter(is_active=True)
+        .annotate(product_count=Count('products'))
+        .order_by('-product_count')[:8]
+    )
     # Popular products = most ordered
     popular_products = Product.objects.filter(is_active=True).annotate(
         order_count=Count('order_items')
@@ -30,21 +37,27 @@ def home_view(request):
         'categories': categories,
         'popular_products': popular_products,
         'latest_products': latest_products,
+        'featured_brands': featured_brands,
     }
     return render(request, 'home.html', context)
 
 
 def product_list_view(request):
-    """List products with search, category filter, and price sorting."""
-    products = Product.objects.filter(is_active=True)
+    """List products with search, brand/category filter, and price sorting."""
+    products = Product.objects.filter(is_active=True).select_related('brand', 'category')
     categories = Category.objects.all()
+    brands = Brand.objects.filter(is_active=True)
 
-    # --- Search ---
+    # --- Search (includes brand names) ---
     query = request.GET.get('q', '')
+    matched_brand = None
     if query:
         products = products.filter(
-            Q(name__icontains=query) | Q(description__icontains=query)
+            Q(name__icontains=query)
+            | Q(description__icontains=query)
+            | Q(brand__name__icontains=query)
         )
+        matched_brand = Brand.objects.filter(name__icontains=query, is_active=True).first()
 
     # --- Category filter ---
     category_slug = request.GET.get('category', '')
@@ -52,6 +65,13 @@ def product_list_view(request):
     if category_slug:
         active_category = get_object_or_404(Category, slug=category_slug)
         products = products.filter(category=active_category)
+
+    # --- Brand filter (multiple) ---
+    brand_slugs = request.GET.getlist('brand')
+    active_brands = []
+    if brand_slugs:
+        active_brands = list(Brand.objects.filter(slug__in=brand_slugs, is_active=True))
+        products = products.filter(brand__in=active_brands)
 
     # --- Price range filter ---
     min_price = request.GET.get('min_price', '')
@@ -82,18 +102,41 @@ def product_list_view(request):
     context = {
         'page_obj': page_obj,
         'categories': categories,
+        'brands': brands.annotate(product_count=Count('products')),
         'query': query,
         'active_category': active_category,
+        'active_brands': active_brands,
         'sort_by': sort_by,
         'min_price': min_price,
         'max_price': max_price,
+        'matched_brand': matched_brand,
     }
     return render(request, 'products/product_list.html', context)
 
 
 def product_detail_view(request, slug):
     """Product detail page with reviews and related products."""
-    product = get_object_or_404(Product, slug=slug, is_active=True)
+    product = get_object_or_404(Product.objects.select_related('brand', 'category'), slug=slug, is_active=True)
+    
+    # --- Referral Tracking ---
+    ref_id = request.GET.get('ref')
+    if ref_id and ref_id.isdigit():
+        try:
+            referrer = User.objects.get(pk=int(ref_id))
+            if not request.user.is_authenticated or request.user != referrer:
+                ip = request.META.get('REMOTE_ADDR', '')
+                Referral.objects.create(
+                    referrer_user=referrer,
+                    product=product,
+                    visitor_ip=ip
+                )
+                request.session['referral_active'] = {
+                    'referrer_id': referrer.id,
+                    'product_id': product.id
+                }
+        except User.DoesNotExist:
+            pass
+
     reviews = product.reviews.all()
     is_wishlisted = False
     user_review = None
@@ -118,6 +161,110 @@ def product_detail_view(request, slug):
         'user_review': user_review,
     }
     return render(request, 'products/product_detail.html', context)
+
+
+def brand_list_view(request):
+    """List all active brands with filters and client-side search."""
+    brands = Brand.objects.filter(is_active=True).annotate(product_count=Count('products'))
+
+    # Filter by country
+    country = request.GET.get('country', '').strip()
+    if country:
+        brands = brands.filter(country_of_origin__iexact=country)
+
+    # Optional: filter by category (brands that have products in that category)
+    category_slug = request.GET.get('category', '').strip()
+    active_category = None
+    if category_slug:
+        active_category = get_object_or_404(Category, slug=category_slug)
+        brands = brands.filter(products__category=active_category).distinct()
+
+    # Sorting
+    sort = request.GET.get('sort', 'name')
+    if sort == 'products':
+        brands = brands.order_by('-product_count', 'name')
+    else:
+        brands = brands.order_by('name')
+
+    paginator = Paginator(brands, 24)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    countries = (
+        Brand.objects.filter(is_active=True)
+        .exclude(country_of_origin='')
+        .values_list('country_of_origin', flat=True)
+        .distinct()
+        .order_by('country_of_origin')
+    )
+
+    context = {
+        'page_obj': page_obj,
+        'countries': countries,
+        'active_country': country,
+        'active_category': active_category,
+        'sort': sort,
+    }
+    return render(request, 'products/brand_list.html', context)
+
+
+def brand_detail_view(request, slug):
+    """Show details for a single brand and its products (with same filters as list)."""
+    brand = get_object_or_404(Brand, slug=slug, is_active=True)
+
+    products = Product.objects.filter(is_active=True, brand=brand).select_related('brand', 'category')
+    categories = Category.objects.all()
+
+    # Search (within brand)
+    query = request.GET.get('q', '')
+    if query:
+        products = products.filter(
+            Q(name__icontains=query) | Q(description__icontains=query)
+        )
+
+    # Category filter within this brand
+    category_slug = request.GET.get('category', '')
+    active_category = None
+    if category_slug:
+        active_category = get_object_or_404(Category, slug=category_slug)
+        products = products.filter(category=active_category)
+
+    # Price filter
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+    if min_price:
+        products = products.filter(price__gte=min_price)
+    if max_price:
+        products = products.filter(price__lte=max_price)
+
+    # Sorting
+    sort_by = request.GET.get('sort', '')
+    if sort_by == 'price_low':
+        products = products.order_by('price')
+    elif sort_by == 'price_high':
+        products = products.order_by('-price')
+    elif sort_by == 'name':
+        products = products.order_by('name')
+    elif sort_by == 'newest':
+        products = products.order_by('-created_at')
+    elif sort_by == 'rating':
+        products = products.annotate(avg_rating=Avg('reviews__rating')).order_by('-avg_rating')
+
+    paginator = Paginator(products, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'brand': brand,
+        'page_obj': page_obj,
+        'categories': categories,
+        'query': query,
+        'active_category': active_category,
+        'sort_by': sort_by,
+        'min_price': min_price,
+        'max_price': max_price,
+    }
+    return render(request, 'products/brand_detail.html', context)
 
 
 @login_required

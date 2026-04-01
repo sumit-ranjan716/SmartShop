@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Disable 2FA | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center">
+    <div class="card shadow-sm border-0" style="max-width: 450px; width: 100%; border-top: 4px solid var(--bs-danger) !important;">
+        <div class="card-body p-4 p-md-5 text-center">
+            <i class="bi bi-shield-x text-danger display-4 mb-3"></i>
+            <h3 class="fw-bold">Disable Two-Factor Authentication</h3>
+            
+            <p class="text-muted mt-3">
+                Disabling two-factor authentication will make your account less secure. Your current recovery codes will be invalidated.
+            </p>
+
+            <form method="POST" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger w-100 fw-semibold mb-3">
+                    Yes, Disable 2FA
+                </button>
+                <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary w-100">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

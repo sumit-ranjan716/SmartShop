@@ -19,7 +19,7 @@
     <div class="row">
         <!-- ============ SIDEBAR FILTERS ============ -->
         <div class="col-lg-3 mb-4">
-            <div class="card border-0 shadow-sm sticky-lg-top" style="top: 80px;">
+            <div class="card glass-card border-0 shadow-sm sticky-lg-top" style="top: 80px;">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3"><i class="bi bi-funnel me-2"></i>Filters</h5>
 
@@ -39,6 +39,36 @@
                             </a>
                             {% endfor %}
                         </div>
+                    </div>
+
+                    <!-- Brands -->
+                    <div class="mb-4">
+                        <h6 class="fw-semibold text-uppercase small text-muted mb-2">Brands</h6>
+                        <form method="GET" action="{% url 'products:product_list' %}">
+                            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                            {% if active_category %}<input type="hidden" name="category" value="{{ active_category.slug }}">{% endif %}
+                            {% if sort_by %}<input type="hidden" name="sort" value="{{ sort_by }}">{% endif %}
+                            {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+                            {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+                            <div class="brand-filter list-group list-group-flush small">
+                                {% for b in brands %}
+                                <label class="list-group-item border-0 d-flex align-items-center gap-2 px-0">
+                                    <input type="checkbox" name="brand" value="{{ b.slug }}" class="form-check-input me-1"
+                                           {% for ab in active_brands %}{% if ab.slug == b.slug %}checked{% endif %}{% endfor %}>
+                                    {% if b.logo %}
+                                        <img src="{{ b.logo.url }}" alt="{{ b.name }}" class="rounded-circle" style="width: 16px; height: 16px; object-fit: cover;">
+                                    {% else %}
+                                        <span class="badge bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 16px; height: 16px; font-size: 0.6rem;">
+                                            {{ b.name|first|upper }}
+                                        </span>
+                                    {% endif %}
+                                    <span>{{ b.name }}</span>
+                                    <span class="ms-auto badge bg-light text-muted">{{ b.product_count }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <button type="submit" class="btn btn-outline-primary btn-sm w-100 mt-2">Apply Brands</button>
+                        </form>
                     </div>
 
                     <!-- Price Range -->
@@ -98,6 +128,19 @@
                     </select>
                 </div>
             </div>
+
+            <!-- Matched brand banner -->
+            {% if matched_brand %}
+            <div class="alert alert-primary d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <strong>Looking for {{ matched_brand.name }}?</strong>
+                    <div class="small text-muted">See all products from this brand.</div>
+                </div>
+                <a href="{{ matched_brand.get_absolute_url }}" class="btn btn-sm btn-primary">
+                    See all {{ matched_brand.name }} products &rarr;
+                </a>
+            </div>
+            {% endif %}
 
             <!-- Product Grid -->
             <div class="row g-4">

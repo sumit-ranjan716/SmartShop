@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartShop — Order Confirmation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            color: #111827;
+        }
+        .wrapper {
+            width: 100%;
+            padding: 16px 0;
+        }
+        .outer-table {
+            width: 100%;
+            border-spacing: 0;
+            border-collapse: collapse;
+        }
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+        }
+        .header {
+            background-color: #6366f1;
+            padding: 20px 24px;
+            color: #ffffff;
+        }
+        .brand {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+        .content {
+            padding: 24px 24px 28px 24px;
+        }
+        h1 {
+            font-size: 22px;
+            margin: 0 0 10px 0;
+        }
+        p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0 0 10px 0;
+            color: #4b5563;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 11px;
+            border-radius: 999px;
+            background-color: #ecfdf3;
+            color: #166534;
+            font-weight: 600;
+        }
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 18px 0 8px 0;
+            color: #111827;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        .table th,
+        .table td {
+            padding: 10px 8px;
+            font-size: 13px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .table tr:nth-child(even) td {
+            background-color: #f9fafb;
+        }
+        .table tr:nth-child(odd) td {
+            background-color: #ffffff;
+        }
+        .table td {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .summary-table {
+            width: 100%;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .summary-table td {
+            padding: 4px 0;
+        }
+        .summary-label {
+            color: #6b7280;
+        }
+        .summary-total {
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .muted {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        .address-box {
+            padding: 10px 12px;
+            border-radius: 8px;
+            background-color: #f9fafb;
+            font-size: 13px;
+            color: #4b5563;
+        }
+        .footer {
+            padding: 18px 24px;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+        @media only screen and (max-width: 640px) {
+            .container {
+                width: 100% !important;
+                border-radius: 0 !important;
+            }
+            .content,
+            .header,
+            .footer {
+                padding-left: 16px !important;
+                padding-right: 16px !important;
+            }
+            .table th,
+            .table td {
+                padding: 8px 4px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <table class="outer-table" role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+                <td align="center">
+                    <table class="container" role="presentation" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td class="header">
+                                <div class="brand">
+                                    🛍️ SmartShop
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="content">
+                                {% if is_seller_notification %}
+                                    <p class="muted" style="margin-bottom: 4px;">Seller notification</p>
+                                    <h1>New order for your products</h1>
+                                    <p>
+                                        Hi {{ seller.first_name|default:seller.username }},<br>
+                                        You have a new order containing the following items from your SmartShop catalog.
+                                    </p>
+                                {% else %}
+                                    <h1>Thank you for your order!</h1>
+                                    <p>
+                                        Hi {{ order.full_name }},<br>
+                                        We’re happy to let you know that we’ve received your order.
+                                    </p>
+                                {% endif %}
+
+                                <p style="margin-top: 10px;">
+                                    <strong>Order #{{ order.order_number }}</strong><br>
+                                    Placed on {{ order.created_at|date:"d M Y, h:i A" }}<br>
+                                    <span class="badge">{{ order.status|default:"Processing" }}</span>
+                                </p>
+
+                                <p class="section-title">Order details</p>
+                                <table class="table" role="presentation" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <th align="left">Product</th>
+                                        <th align="center">Qty</th>
+                                        <th align="right">Unit price</th>
+                                        <th align="right">Subtotal</th>
+                                    </tr>
+                                    {% for item in items %}
+                                    <tr>
+                                        <td>{{ item.product_name }}</td>
+                                        <td align="center">{{ item.quantity }}</td>
+                                        <td align="right">{{ currency_symbol }}{{ item.price }}</td>
+                                        <td align="right">{{ currency_symbol }}{{ item.price|floatformat:2|add:"0"|floatformat:2|default:item.get_total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </table>
+
+                                <p class="section-title">Summary</p>
+                                <table class="summary-table" role="presentation" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td class="summary-label">Subtotal</td>
+                                        <td class="text-right">{{ currency_symbol }}{{ order.subtotal }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="summary-label">Shipping</td>
+                                        <td class="text-right">Free</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="summary-total">Total</td>
+                                        <td class="text-right summary-total">{{ currency_symbol }}{{ order.total }}</td>
+                                    </tr>
+                                </table>
+
+                                <p class="section-title">Shipping address</p>
+                                <div class="address-box">
+                                    {{ order.full_name }}<br>
+                                    {{ order.address }}<br>
+                                    {{ order.city }}, {{ order.state }} {{ order.zipcode }}<br>
+                                    {{ order.phone }}
+                                </div>
+
+                                <p class="section-title">Payment</p>
+                                <p style="font-size: 13px; color: #4b5563;">
+                                    Payment method: {{ order.payment_method|default:"Online payment" }}
+                                </p>
+
+                                <p class="section-title">Estimated delivery</p>
+                                <p>
+                                    Your order will be delivered within <strong>5–7 business days</strong>. We’ll send you another email when your items are on the way.
+                                </p>
+                                {% if not is_seller_notification %}
+                                <p class="section-title">Track your order</p>
+                                <p>
+                                    Track live updates here:
+                                    <a href="{{ tracking_url }}">{{ tracking_url }}</a>
+                                </p>
+                                {% endif %}
+
+                                <p class="muted" style="margin-top: 16px;">
+                                    Need help? Reply to this email and our support team will be happy to assist you.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="footer">
+                                <p>&copy; {{ now|date:"Y" }} SmartShop. All rights reserved.</p>
+                                <p>SmartShop — Shop smarter with curated products and intelligent recommendations.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
+

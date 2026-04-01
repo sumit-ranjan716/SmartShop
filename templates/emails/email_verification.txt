@@ -1,0 +1,13 @@
+SmartShop — Verify your email
+
+Hi {{ user.username }},
+
+Thanks for creating a SmartShop account. Please verify your email address by opening the link below:
+
+{{ verify_url }}
+
+This link will expire in 24 hours. If you didn’t create a SmartShop account, you can safely ignore this email.
+
+Thanks,
+The SmartShop Team
+

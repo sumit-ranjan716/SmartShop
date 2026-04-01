@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Two-Factor Authentication | SmartShop{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center">
+    <div class="card shadow-sm border-0" style="max-width: 450px; width: 100%;">
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+                <i class="bi bi-shield-check text-primary display-4"></i>
+                <h3 class="fw-bold mt-3">Two-Factor Verification</h3>
+                <p class="text-muted">Enter the 6-digit code from your authenticator app.</p>
+            </div>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Authentication Code</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-123"></i></span>
+                        <input type="text" name="token" class="form-control form-control-lg text-center letter-spacing-2" placeholder="------" required autocomplete="off" autofocus>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold mb-3">
+                    Verify
+                </button>
+
+                <div class="text-center">
+                    <button type="button" class="btn btn-link text-decoration-none small" data-bs-toggle="collapse" data-bs-target="#recoverySection">
+                        Use a recovery code instead
+                    </button>
+                </div>
+            </form>
+
+            <div class="collapse mt-3" id="recoverySection">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Recovery Code</label>
+                        <input type="text" name="token" class="form-control" placeholder="Enter one of your 8-character codes" required autocomplete="off">
+                    </div>
+                    <button type="submit" class="btn btn-outline-secondary w-100 btn-sm">Verify Recovery Code</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

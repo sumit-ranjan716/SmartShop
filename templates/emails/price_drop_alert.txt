@@ -1,0 +1,13 @@
+Good News from SmartShop!
+
+Hello {{ user.get_full_name|default:user.username }},
+
+You set a price alert for {{ product.name }} at ₹{{ target_price }}.
+We are happy to inform you that the price has dropped to ₹{{ current_price }}!
+
+Now is a great time to buy. Don't miss out on this deal.
+
+View Product: {{ product_url }}
+
+Happy Shopping,
+The SmartShop Team
