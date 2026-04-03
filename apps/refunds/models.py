@@ -37,6 +37,9 @@ class RefundRequest(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def __str__(self):
+        return f'Refund #{self.pk} — Order {self.order} ({self.status})'
+
 
 class ExchangeRequest(models.Model):
     STATUS = RefundRequest.STATUS
@@ -58,6 +61,9 @@ class ExchangeRequest(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def __str__(self):
+        return f'Exchange #{self.pk} — Order {self.order} ({self.status})'
+
 
 class RefundPhoto(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -65,4 +71,7 @@ class RefundPhoto(models.Model):
     request = GenericForeignKey('content_type', 'object_id')
     photo = models.ImageField(upload_to='refund_photos/%Y/%m/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Photo #{self.pk} for {self.content_type} #{self.object_id}'
 

@@ -137,3 +137,66 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 });
+
+/* ---- Scroll-Reveal Animations (light mode only) ---- */
+(function () {
+    function isLightMode() {
+        return document.documentElement.getAttribute('data-bs-theme') !== 'dark';
+    }
+
+    let observer = null;
+
+    function attachScrollReveal() {
+        if (!isLightMode()) return;
+
+        // Disconnect previous observer if re-running after theme switch
+        if (observer) observer.disconnect();
+
+        const targets = document.querySelectorAll(
+            '.product-card, .card, .category-card, h2, h3'
+        );
+
+        targets.forEach((el, i) => {
+            el.classList.add('scroll-reveal');
+            el.style.transitionDelay = (i % 4) * 0.08 + 's';
+        });
+
+        observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    observer.unobserve(e.target); // fire once
+                }
+            });
+        }, { threshold: 0.1 });
+
+        targets.forEach(el => observer.observe(el));
+    }
+
+    function detachScrollReveal() {
+        if (observer) { observer.disconnect(); observer = null; }
+        document.querySelectorAll('.scroll-reveal').forEach(el => {
+            el.classList.remove('scroll-reveal', 'visible');
+            el.style.transitionDelay = '';
+        });
+    }
+
+    // Re-run when theme attribute changes
+    const modeObserver = new MutationObserver(() => {
+        if (isLightMode()) {
+            attachScrollReveal();
+        } else {
+            detachScrollReveal();
+        }
+    });
+    modeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-bs-theme']
+    });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachScrollReveal);
+    } else {
+        attachScrollReveal();
+    }
+})();

@@ -114,10 +114,13 @@
 
             <!-- Wishlist -->
             {% if user.is_authenticated %}
-            <a href="{% url 'products:toggle_wishlist' product.slug %}" class="btn {% if is_wishlisted %}btn-danger{% else %}btn-outline-danger{% endif %} mb-4">
-                <i class="bi {% if is_wishlisted %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"></i>
-                {% if is_wishlisted %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}
-            </a>
+            <form method="POST" action="{% url 'products:toggle_wishlist' product.slug %}" class="mb-4">
+                {% csrf_token %}
+                <button type="submit" class="btn {% if is_wishlisted %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                    <i class="bi {% if is_wishlisted %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"></i>
+                    {% if is_wishlisted %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}
+                </button>
+            </form>
             {% endif %}
 
             <!-- Product Meta -->

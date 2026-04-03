@@ -12,11 +12,14 @@
         <div class="col-6 col-md-4 col-lg-3">
             <div class="position-relative">
                 {% include 'products/_product_card.html' with product=item.product %}
-                <a href="{% url 'products:toggle_wishlist' item.product.slug %}" 
-                   class="btn btn-sm btn-danger position-absolute top-0 start-0 m-2 rounded-circle"
-                   title="Remove from wishlist">
-                    <i class="bi bi-heart-fill"></i>
-                </a>
+                <form method="POST" action="{% url 'products:toggle_wishlist' item.product.slug %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="btn btn-sm btn-danger position-absolute top-0 start-0 m-2 rounded-circle"
+                            title="Remove from wishlist">
+                        <i class="bi bi-heart-fill"></i>
+                    </button>
+                </form>
             </div>
         </div>
         {% empty %}

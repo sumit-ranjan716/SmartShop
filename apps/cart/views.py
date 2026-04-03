@@ -81,7 +81,8 @@ def add_to_cart_view(request, product_id):
 @require_POST
 def update_cart_view(request, item_id):
     """Update quantity of a cart item."""
-    cart_item = get_object_or_404(CartItem, pk=item_id)
+    cart = _get_or_create_cart(request)
+    cart_item = get_object_or_404(CartItem, pk=item_id, cart=cart)
     quantity = int(request.POST.get('quantity', 1))
 
     if quantity <= 0:
@@ -98,15 +99,18 @@ def update_cart_view(request, item_id):
     return redirect('cart:cart')
 
 
+@require_POST
 def remove_from_cart_view(request, item_id):
     """Remove an item from the cart."""
-    cart_item = get_object_or_404(CartItem, pk=item_id)
+    cart = _get_or_create_cart(request)
+    cart_item = get_object_or_404(CartItem, pk=item_id, cart=cart)
     product_name = cart_item.product.name
     cart_item.delete()
     messages.info(request, f'"{product_name}" removed from your cart.')
     return redirect('cart:cart')
 
 
+@require_POST
 def clear_cart_view(request):
     """Clear all items from the cart."""
     cart = _get_or_create_cart(request)

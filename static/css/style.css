@@ -595,3 +595,332 @@ a:hover {
     background: rgba(99, 102, 241, 0.2);
     color: var(--primary-dark);
 }
+
+/* ============================================================
+   LIGHT MODE VISUAL OVERHAUL
+   All rules below are scoped to light mode only via
+   :root:not([data-bs-theme="dark"])
+   Dark mode is completely unchanged.
+   ============================================================ */
+
+/* --- 1. ANIMATED WAVE GRADIENT BACKGROUND --- */
+:root:not([data-bs-theme="dark"]) body {
+    min-height: 100vh;
+    background: linear-gradient(
+        125deg,
+        #e0c3fc, #8ec5fc, #d4fc79, #96e6a1, #fccb90, #d57eeb
+    ) !important;
+    background-size: 400% 400% !important;
+    animation: waveGradient 12s ease infinite;
+    background-color: unset !important;
+}
+
+@keyframes waveGradient {
+    0%   { background-position: 0% 50%; }
+    25%  { background-position: 100% 0%; }
+    50%  { background-position: 100% 100%; }
+    75%  { background-position: 0% 100%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Frosted overlay so content stays readable */
+:root:not([data-bs-theme="dark"]) body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(0px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+:root:not([data-bs-theme="dark"]) .container,
+:root:not([data-bs-theme="dark"]) .container-fluid {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- 2. HERO SECTION LIGHT MODE --- */
+:root:not([data-bs-theme="dark"]) .hero-light {
+    background: transparent !important;
+    padding: 100px 0 80px;
+}
+
+/* Animated gradient headline */
+:root:not([data-bs-theme="dark"]) .hero-light h1 {
+    background: linear-gradient(270deg, #6366f1, #8b5cf6, #ec4899, #f59e0b, #6366f1);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: heroTextShift 6s ease infinite;
+}
+
+@keyframes heroTextShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Floating badge pulse */
+:root:not([data-bs-theme="dark"]) .hero-light .badge,
+:root:not([data-bs-theme="dark"]) .hero-light [class*="ai-badge"] {
+    animation: badgePulse 3s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+}
+
+@keyframes badgePulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+    50%       { box-shadow: 0 0 30px rgba(99, 102, 241, 0.9); }
+}
+
+/* Hero stat counters — subtle float */
+:root:not([data-bs-theme="dark"]) .hero-light .hero-stats,
+:root:not([data-bs-theme="dark"]) .hero-light [class*="stat"] {
+    animation: statFloat 4s ease-in-out infinite;
+}
+
+@keyframes statFloat {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-6px); }
+}
+
+/* Hero icon — slow 3D rotate */
+:root:not([data-bs-theme="dark"]) .hero-light .hero-illustration,
+:root:not([data-bs-theme="dark"]) .hero-light .bi-bag-heart {
+    animation: iconSpin3d 8s linear infinite;
+    filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.6));
+}
+
+@keyframes iconSpin3d {
+    0%   { transform: rotateY(0deg) scale(1); }
+    50%  { transform: rotateY(180deg) scale(1.08); }
+    100% { transform: rotateY(360deg) scale(1); }
+}
+
+/* --- 3. LIQUID GLASS PRODUCT CARDS --- */
+:root:not([data-bs-theme="dark"]) .product-card,
+:root:not([data-bs-theme="dark"]) .card.product-card {
+    background: rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: blur(16px) saturate(180%) brightness(1.1);
+    -webkit-backdrop-filter: blur(16px) saturate(180%) brightness(1.1);
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    border-radius: 20px !important;
+    box-shadow:
+        0 8px 32px rgba(99, 102, 241, 0.15),
+        0 2px 8px rgba(255, 255, 255, 0.4) inset,
+        0 -1px 0 rgba(255, 255, 255, 0.2) inset;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    /* Override existing fadeInUp that conflicts with scroll-reveal */
+    animation: none;
+}
+
+/* Depth refraction shimmer layer */
+:root:not([data-bs-theme="dark"]) .product-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        from 180deg at 50% 50%,
+        rgba(255, 255, 255, 0) 0deg,
+        rgba(255, 255, 255, 0.15) 90deg,
+        rgba(255, 255, 255, 0) 180deg,
+        rgba(99, 102, 241, 0.08) 270deg,
+        rgba(255, 255, 255, 0) 360deg
+    );
+    animation: liquidRefract 6s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+}
+
+@keyframes liquidRefract {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* Keep card content above shimmer */
+:root:not([data-bs-theme="dark"]) .product-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Hover — lift + intensify refraction */
+:root:not([data-bs-theme="dark"]) .product-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow:
+        0 20px 60px rgba(99, 102, 241, 0.3),
+        0 4px 16px rgba(255, 255, 255, 0.5) inset;
+    backdrop-filter: blur(24px) saturate(220%) brightness(1.15);
+    -webkit-backdrop-filter: blur(24px) saturate(220%) brightness(1.15);
+}
+
+/* Product image — slight zoom on hover */
+:root:not([data-bs-theme="dark"]) .product-card img {
+    transition: transform 0.5s ease, filter 0.3s ease;
+    border-radius: 14px 14px 0 0;
+}
+
+:root:not([data-bs-theme="dark"]) .product-card:hover img {
+    transform: scale(1.06);
+    filter: brightness(1.05) contrast(1.05);
+}
+
+/* Price text — gradient on product cards */
+:root:not([data-bs-theme="dark"]) .product-card .fw-bold.text-primary,
+:root:not([data-bs-theme="dark"]) .product-card .fw-bold.fs-5 {
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+/* --- 4. GLASSMORPHISM — ALL OTHER CARDS --- */
+:root:not([data-bs-theme="dark"]) .card:not(.product-card),
+:root:not([data-bs-theme="dark"]) .filter-sidebar,
+:root:not([data-bs-theme="dark"]) .profile-card,
+:root:not([data-bs-theme="dark"]) .category-card {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 24px rgba(99, 102, 241, 0.10);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    color: #1e1b4b !important;
+}
+
+:root:not([data-bs-theme="dark"]) .card:not(.product-card):hover,
+:root:not([data-bs-theme="dark"]) .category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(99, 102, 241, 0.2);
+}
+
+/* Navbar in light mode — glass */
+:root:not([data-bs-theme="dark"]) #mainNav {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 20px rgba(99, 102, 241, 0.1);
+}
+
+/* Footer CTA section */
+:root:not([data-bs-theme="dark"]) .cta-section {
+    background: rgba(99, 102, 241, 0.55) !important;
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 0;
+}
+
+/* Section headings */
+:root:not([data-bs-theme="dark"]) h2,
+:root:not([data-bs-theme="dark"]) h3 {
+    color: #1e1b4b;
+}
+
+/* Buttons — gradient glass style */
+:root:not([data-bs-theme="dark"]) .btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    border: none !important;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+:root:not([data-bs-theme="dark"]) .btn-primary:hover {
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.6);
+    transform: translateY(-2px);
+}
+
+/* Search bar — glass */
+:root:not([data-bs-theme="dark"]) .search-form .form-control {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(8px);
+    color: #1e1b4b !important;
+}
+
+:root:not([data-bs-theme="dark"]) .search-form .form-control::placeholder {
+    color: #5b5b8a !important;
+}
+
+/* --- 5. SCROLL-REVEAL BASE CSS (JS will add .visible) --- */
+:root:not([data-bs-theme="dark"]) .scroll-reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+:root:not([data-bs-theme="dark"]) .scroll-reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- 6. TEXT READABILITY --- */
+:root:not([data-bs-theme="dark"]) p,
+:root:not([data-bs-theme="dark"]) span,
+:root:not([data-bs-theme="dark"]) label,
+:root:not([data-bs-theme="dark"]) small {
+    color: #2d2d5e;
+}
+
+:root:not([data-bs-theme="dark"]) .text-muted {
+    color: #5b5b8a !important;
+}
+
+:root:not([data-bs-theme="dark"]) .category-card h6,
+:root:not([data-bs-theme="dark"]) .category-card h5,
+:root:not([data-bs-theme="dark"]) .category-card p,
+:root:not([data-bs-theme="dark"]) .category-card small {
+    color: #1e1b4b !important;
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.4);
+}
+
+/* Ensure card text inherits dark colour, not Bootstrap's forced white */
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) h1,
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) h2,
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) h3,
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) h4,
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) h5,
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) h6,
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) p,
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) span,
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) small {
+    color: inherit;
+}
+
+/* Hero stat numbers stay readable */
+:root:not([data-bs-theme="dark"]) .hero-light h4.fw-bold {
+    color: #1e1b4b;
+    -webkit-text-fill-color: #1e1b4b;
+}
+
+/* bg-light-subtle sections — transparent in light mode */
+:root:not([data-bs-theme="dark"]) .bg-light-subtle {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Table header text */
+:root:not([data-bs-theme="dark"]) .table th {
+    color: #5b5b8a;
+}
+
+/* Form controls on glass cards */
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) .form-control,
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) .form-select {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    color: #1e1b4b !important;
+    backdrop-filter: blur(4px);
+}
+
+:root:not([data-bs-theme="dark"]) .card:not(.product-card) .form-control::placeholder {
+    color: #7c7caa !important;
+}
+

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize static %}
 
 {% block title %}Shopping Cart | SmartShop{% endblock %}
 
@@ -57,9 +57,12 @@
                                     </td>
                                     <td class="fw-semibold">₹{{ item.subtotal|intcomma }}</td>
                                     <td>
-                                        <a href="{% url 'cart:remove' item.id %}" class="btn btn-sm btn-outline-danger" title="Remove">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                        <form method="POST" action="{% url 'cart:remove' item.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -72,9 +75,12 @@
                 <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left me-1"></i>Continue Shopping
                 </a>
-                <a href="{% url 'cart:clear' %}" class="btn btn-outline-danger">
-                    <i class="bi bi-trash me-1"></i>Clear Cart
-                </a>
+                <form method="POST" action="{% url 'cart:clear' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-1"></i>Clear Cart
+                    </button>
+                </form>
             </div>
         </div>
 

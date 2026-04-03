@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q, Count, Avg
 from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
 from django.utils.text import slugify
 from django.contrib.auth.models import User
 from .models import Product, Category, Review, Wishlist, Brand
@@ -293,6 +294,7 @@ def add_review_view(request, slug):
 
 
 @login_required
+@require_POST
 def toggle_wishlist_view(request, slug):
     """Toggle product in/out of wishlist."""
     product = get_object_or_404(Product, slug=slug)
@@ -377,12 +379,12 @@ def seller_edit_product_view(request, pk):
 
 
 @login_required
+@require_POST
 @user_passes_test(is_seller, login_url='/users/profile/')
 def seller_delete_product_view(request, pk):
     """View to delete an existing product."""
     product = get_object_or_404(Product, pk=pk, seller=request.user)
-    if request.method == 'POST':
-        name = product.name
-        product.delete()
-        messages.success(request, f'Product "{name}" deleted successfully.')
+    name = product.name
+    product.delete()
+    messages.success(request, f'Product "{name}" deleted successfully.')
     return redirect('products:seller_dashboard')

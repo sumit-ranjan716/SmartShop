@@ -97,3 +97,6 @@ class CouponUsage(models.Model):
     class Meta:
         ordering = ['-used_at']
 
+    def __str__(self):
+        return f'{self.coupon.code} used by {self.user.username}'
+

@@ -7,13 +7,6 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'email_verified', 'is_seller', 'is_delivery_person', 'city', 'two_factor_enabled']
     search_fields = ['user__username', 'user__email', 'phone', 'city']
     list_filter = ['email_verified', 'is_seller', 'is_delivery_person', 'two_factor_enabled']
-
-
-@admin.register(RecoveryCode)
-class RecoveryCodeAdmin(admin.ModelAdmin):
-    list_display = ['user', 'used', 'created_at']
-    list_filter = ['used', 'created_at']
-    search_fields = ['user__username', 'user__email']
     actions = ['mark_email_verified', 'resend_verification']
 
     @admin.action(description='Manually verify selected users')
@@ -26,7 +19,6 @@ class RecoveryCodeAdmin(admin.ModelAdmin):
 
         for profile in queryset.select_related('user'):
             if not profile.email_verified and profile.user.email:
-                # In admin we do not have request with proper domain; pass a dummy-like object if needed.
                 class DummyRequest:
                     def __init__(self, scheme, host):
                         self.scheme = scheme
@@ -37,3 +29,10 @@ class RecoveryCodeAdmin(admin.ModelAdmin):
 
                 dummy_request = DummyRequest('https', request.get_host())
                 send_verification_email(profile.user, dummy_request)
+
+
+@admin.register(RecoveryCode)
+class RecoveryCodeAdmin(admin.ModelAdmin):
+    list_display = ['user', 'used', 'created_at']
+    list_filter = ['used', 'created_at']
+    search_fields = ['user__username', 'user__email']
